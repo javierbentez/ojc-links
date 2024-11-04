@@ -12,8 +12,11 @@ import {
     contact
 } from "../config";
 
-// fetch all Markdown files in the links directory
-const links = await Astro.glob("./links/*.md");
+import { turso } from '../tursoClient';
+
+// Realizar la consulta para obtener los enlaces
+const result = await turso.execute("SELECT emoji, title, href FROM links");
+const links = Array.isArray(result.rows) ? result.rows : [];
 ---
 
 <Layout title={TITLE + " - " + SUBTITLE}>
@@ -27,9 +30,9 @@ const links = await Astro.glob("./links/*.md");
                     {
                         links.map((link) => (
                             <Link
-                                emoji={link.frontmatter.emoji}
-                                title={link.frontmatter.title}
-                                href={link.frontmatter.href}
+                                emoji={String(link.emoji || "🔗")}
+                                title={String(link.title)}
+                                href={String(link.href)}
                             />
                         ))
                     }
