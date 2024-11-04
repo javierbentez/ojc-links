@@ -1,5 +1,5 @@
 ---
-title: Instagram
-emoji: 📸
-href: https://www.instagram.com/orquestajovencordoba/
+title: Twitter
+emoji: 🐦
+href: https://x.com/orqjovencordoba
 ---

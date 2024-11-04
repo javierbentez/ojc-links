@@ -1,5 +1,5 @@
 ---
-title: Página oficial
-emoji: 🌐
-href: https://orquestajovendecordoba.com/
+title: Instagram
+emoji: 📸
+href: https://www.instagram.com/orquestajovencordoba/
 ---

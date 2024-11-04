@@ -1,5 +1,5 @@
 ---
-title: Entradas Concierto "Festival de Piano"
-emoji: 🎟️
-href: https://teatrocordoba.es/espectaculo/emin-kiourkchian-y-orquesta-de-cordoba/
+title: Página oficial
+emoji: 🌐
+href: https://orquestajovendecordoba.com/
 ---

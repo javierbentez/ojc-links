@@ -1,5 +1,5 @@
 ---
-title: Twitter
-emoji: 🐦
-href: https://x.com/orqjovencordoba
+title: AYUDA DANA - Communicate
+emoji: ❤️
+href: https://www.instagram.com/communicateacademy
 ---
