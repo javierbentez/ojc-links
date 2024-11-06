@@ -1,0 +1,94 @@
+---
+import Manage from "../components/Manage.astro";
+import Layout from "../layouts/Layout.astro";
+import { getSession } from "auth-astro/server";
+
+const session = await getSession(Astro.request);
+
+// Lista de correos electrónicos autorizados
+const authorizedEmails = [
+  "orquestajovendecordoba@gmail.com",
+  "directiva.ojc@gmail.com",
+  "javierbentezgarca@gmail.com"
+];
+
+// Verificar si el usuario está autorizado
+const userEmail = session?.user?.email ?? 'Email Null or Undefined';
+const isAuthorized = authorizedEmails.includes(userEmail);
+---
+
+<Layout title={"Admin"}>
+    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-6xl m-10">
+            {
+                session &&
+                    (isAuthorized ? (
+                        <Manage />
+                    ) : (
+                        <h1 class="text-2xl font-bold mb-6 text-center">
+                            No tienes permisos para acceder a esta página
+                        </h1>
+                    ))
+            }
+            {
+                session ? (
+                    <button
+                        id="logoutBtn"
+                        class="flex items-center justify-center w-full bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-700 transition duration-200 mt-4"
+                    >
+                        Cerrar sesión
+                    </button>
+                ) : (
+                    <>
+                        <h1 class="text-2xl font-bold mb-6 text-center">
+                            Login
+                        </h1>
+                        <button
+                            id="loginBtn"
+                            class="flex items-center justify-center w-full bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-700 transition duration-200"
+                        >
+                            <img
+                                src="https://www.svgrepo.com/show/303108/google-icon-logo.svg"
+                                alt="Google Logo"
+                                class="w-6 h-6 mr-2"
+                            />
+                            Iniciar sesión con Google
+                        </button>
+                    </>
+                )
+            }
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", async () => {
+                const { signIn } = await import("auth-astro/client");
+                try {
+                    const loginBtn = document.getElementById("loginBtn");
+                    if (loginBtn) {
+                        loginBtn.addEventListener("click", async () => {
+                            try {
+                                await signIn("google");
+                            } catch (error) {
+                                console.error("Error during sign-in");
+                                alert(
+                                    "Error during sign-in. Please try again.",
+                                );
+                            }
+                        });
+                    }
+                } catch (error) {}
+            });
+
+            document.addEventListener("DOMContentLoaded", async () => {
+                const { signOut } = await import("auth-astro/client");
+                try {
+                    const logoutBtn = document.getElementById("logoutBtn");
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener("click", () => {
+                            signOut();
+                        });
+                    }
+                } catch (error) {}
+            });
+        </script>
+    </div>
+</Layout>

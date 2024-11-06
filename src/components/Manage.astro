@@ -1,0 +1,228 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { turso } from "../tursoClient";
+
+const result = await turso.execute("SELECT emoji, title, href FROM links");
+const links = result.rows;
+---
+
+<Layout title="Manage Links">
+  <div class="p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4">Editar Links</h2>
+    <div class="mb-4">
+      <input
+        type="text"
+        id="newEmoji"
+        placeholder="Emoji"
+        class="border border-gray-300 p-2 rounded mb-2 w-full"
+      />
+      <input
+        type="text"
+        id="newTitle"
+        placeholder="Título"
+        class="border border-gray-300 p-2 rounded mb-2 w-full"
+      />
+      <input
+        type="text"
+        id="newHref"
+        placeholder="URL"
+        class="border border-gray-300 p-2 rounded mb-2 w-full"
+      />
+      <button
+        id="addBtn"
+        class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200 w-full"
+      >
+        Añadir Link
+      </button>
+      <button
+        id="updateBtn"
+        class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition duration-200 w-full"
+        style="display: none;"
+      >
+        Actualizar Link
+      </button>
+      <button
+        id="cancelBtn"
+        class="bg-gray-500 text-white py-2 px-4 mt-2 rounded hover:bg-gray-600 transition duration-200 w-full"
+        style="display: none;"
+      >
+        Cancelar
+      </button>
+    </div>
+    <ul class="space-y-2" id="linksList">
+      {
+        links.map((link) => (
+          <li class="flex justify-between items-center p-2 border border-gray-300 rounded">
+            <span>
+              {link.emoji} {link.title} - {link.href}
+            </span>
+            <div>
+              <button
+                class="editBtn bg-yellow-500 text-white py-1 px-2 rounded hover:bg-yellow-600 transition duration-200 mr-2"
+                data-link={JSON.stringify(link)}
+              >
+                Edit
+              </button>
+              <button
+                class="deleteBtn bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 transition duration-200"
+                data-href={link.href}
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</Layout>
+
+<script>
+  declare global {
+    interface Window {
+      editingLink: Link | null;
+    }
+  }
+
+  interface Link {
+    emoji: string;
+    title: string;
+    href: string;
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    const handleAddLink = async () => {
+      const emoji = (document.getElementById("newEmoji") as HTMLInputElement)
+        .value;
+      const title = (document.getElementById("newTitle") as HTMLInputElement)
+        .value;
+      const href = (document.getElementById("newHref") as HTMLInputElement)
+        .value;
+      const response = await fetch("/api/add-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ emoji, title, href }),
+      });
+      if (response.ok) {
+        location.reload();
+      } else {
+        const errorMessage = await response.text();
+        alert(errorMessage || "Failed to add link");
+      }
+    };
+
+    const handleDeleteLink = async (href: string) => {
+      const response = await fetch("/api/delete-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ href }),
+      });
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert("Failed to delete link");
+      }
+    };
+
+    const handleEditLink = (link: Link) => {
+      (document.getElementById("newEmoji") as HTMLInputElement).value =
+        link.emoji;
+      (document.getElementById("newTitle") as HTMLInputElement).value =
+        link.title;
+      (document.getElementById("newHref") as HTMLInputElement).value =
+        link.href;
+      const updateBtn = document.getElementById("updateBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const addBtn = document.getElementById("addBtn");
+
+      if (updateBtn && cancelBtn && addBtn) {
+        updateBtn.style.display = "block";
+        cancelBtn.style.display = "block";
+        addBtn.style.display = "none";
+      }
+      window.editingLink = link;
+    };
+
+    const handleUpdateLink = async () => {
+      const emoji = (document.getElementById("newEmoji") as HTMLInputElement)
+        .value;
+      const title = (document.getElementById("newTitle") as HTMLInputElement)
+        .value;
+      const href = (document.getElementById("newHref") as HTMLInputElement)
+        .value;
+
+      if (!window.editingLink) {
+        alert("Failed to update link");
+        return;
+      }
+      const response = await fetch("/api/edit-link", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          emoji,
+          title,
+          href,
+          oldHref: window.editingLink.href,
+        }),
+      });
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert("Failed to update link");
+      }
+    };
+
+    const handleCancelEdit = () => {
+      (document.getElementById("newEmoji") as HTMLInputElement).value = "";
+      (document.getElementById("newTitle") as HTMLInputElement).value = "";
+      (document.getElementById("newHref") as HTMLInputElement).value = "";
+
+      const updateBtn = document.getElementById("updateBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const addBtn = document.getElementById("addBtn");
+
+      if (updateBtn && cancelBtn && addBtn) {
+        updateBtn.style.display = "none";
+        cancelBtn.style.display = "none";
+        addBtn.style.display = "block";
+      }
+
+      window.editingLink = null;
+    };
+
+    const updateBtn = document.getElementById("updateBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const addBtn = document.getElementById("addBtn");
+    const deleteBtns = document.querySelectorAll(".deleteBtn");
+
+    if (updateBtn && cancelBtn && addBtn && deleteBtns) {
+      addBtn.addEventListener("click", handleAddLink);
+      updateBtn.addEventListener("click", handleUpdateLink);
+      cancelBtn.addEventListener("click", handleCancelEdit);
+      deleteBtns.forEach((btn) => {
+        document.querySelectorAll(".deleteBtn").forEach((btn) => {
+          (btn as HTMLElement).addEventListener("click", () => {
+            const href = (btn as HTMLElement).dataset.href;
+            if (href) {
+              handleDeleteLink(href);
+            }
+          });
+        });
+
+        document.querySelectorAll(".editBtn").forEach((btn) => {
+          (btn as HTMLElement).addEventListener("click", () => {
+            const link = (btn as HTMLElement).dataset.link;
+            if (link) {
+              handleEditLink(JSON.parse(link));
+            }
+          });
+        });
+      });
+    }
+  });
+</script>
